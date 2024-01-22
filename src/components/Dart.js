@@ -90,40 +90,16 @@ export default function Dart({ player, updatePoints, playerScore }) {
     const x = (width * (xPercentage / 100)).toFixed(0);
     const y = (height * ((100 - yPercentage) / 100)).toFixed(0);
     if (y < height) {
-      const timer2 = setTimeout(() => {
-        returnValue((width / 2 + parseInt(x)).toFixed(0), y);
-      }, 3000);
-
       setMoveDone(true);
       setDarts((prev) => {
         prev[dartThrowIndex].position = {
-          bottom: height - parseInt(y) + 5 + "px",
-          left:
-            "calc(50% + " +
-            x +
-            "px" +
-            " - " +
-            (x / 30).toFixed(1) +
-            "px - 10px)",
+          bottom: height - y - 10 + "px",
+          left: "calc(50% + " + x + "px - 10px)",
         };
         return prev;
       });
       setDartThrowIndex(dartThrowIndex + 1);
-
-      const timer = setTimeout(() => {
-        setDarts((prev) => {
-          prev[dartThrowIndex].position = {
-            bottom: height - y - 10 + "px",
-            left: "calc(50% + " + x + "px - 10px)",
-          };
-          return prev;
-        });
-      }, 2300);
-
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(timer2);
-      };
+      returnValue((width / 2 + parseInt(x)).toFixed(0), y);
     } else {
       console.log("Try again...");
     }
@@ -134,7 +110,14 @@ export default function Dart({ player, updatePoints, playerScore }) {
   const returnValue = (x, y) => {
     const element = document.elementFromPoint(x, y);
     if (element && element.classList.contains("dartPoint")) {
-      setScore(score + parseInt(element.getAttribute("value")));
+      const timer = setTimeout(() => {
+        const totalScore = score + parseInt(element.getAttribute("value"));
+        setScore(totalScore);
+        checkScore(totalScore);
+      }, 2500);
+      return () => {
+        clearTimeout(timer);
+      };
     }
   };
 
@@ -146,11 +129,15 @@ export default function Dart({ player, updatePoints, playerScore }) {
     }
   };
 
-  const middleThrow = () => {
-    if (playerScore < score) {
-      updatePoints(0);
-    } else if (playerScore === score) {
+  const checkScore = (score) => {
+    if (dartThrowIndex > 2) {
       updatePoints(score);
+    } else {
+      if (playerScore < score) {
+        updatePoints(0);
+      } else if (playerScore === score) {
+        updatePoints(score);
+      }
     }
   };
 
@@ -168,20 +155,6 @@ export default function Dart({ player, updatePoints, playerScore }) {
     }, 3000);
     return () => clearTimeout(timer);
   }, [movingDart]);
-
-  useEffect(() => {
-    if (dartThrowIndex === 3) {
-      const timer = setTimeout(() => {
-        lastThrow();
-      }, 4500);
-      return () => clearTimeout(timer);
-    } else {
-      const timer = setTimeout(() => {
-        middleThrow();
-      }, 4500);
-      return () => clearTimeout(timer);
-    }
-  }, [dartThrowIndex]);
 
   useEffect(() => {
     refreshStates();
