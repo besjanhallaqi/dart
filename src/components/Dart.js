@@ -130,7 +130,7 @@ export default function Dart({ player, updatePoints, playerScore }) {
   };
 
   const checkScore = (score) => {
-    if (dartThrowIndex > 2) {
+    if (dartThrowIndex === 2) {
       updatePoints(score);
     } else {
       if (playerScore < score) {
