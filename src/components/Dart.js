@@ -46,6 +46,7 @@ export default function Dart({ player, updatePoints, playerScore }) {
   const [moveDone, setMoveDone] = useState(false);
   const [dartThrowIndex, setDartThrowIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [scorePoints, setScorePoints] = useState([]);
   const [darts, setDarts] = useState(dartsDefaultPosition);
 
   let content, height, width;
@@ -59,6 +60,7 @@ export default function Dart({ player, updatePoints, playerScore }) {
 
   const refreshStates = () => {
     setScore(0);
+    setScorePoints([]);
     setDartThrowIndex(0);
     setFirstPoint();
     setSecondPoint();
@@ -109,24 +111,20 @@ export default function Dart({ player, updatePoints, playerScore }) {
 
   const returnValue = (x, y) => {
     const element = document.elementFromPoint(x, y);
-    if (element && element.classList.contains("dartPoint")) {
-      const timer = setTimeout(() => {
-        const totalScore = score + parseInt(element.getAttribute("value"));
+    const timer = setTimeout(() => {
+      if (element && element.classList.contains("dartPoint")) {
+        const points = parseInt(element.getAttribute("value"));
+        const totalScore = score + points;
         setScore(totalScore);
+        setScorePoints([...scorePoints, points]);
         checkScore(totalScore);
-      }, 2500);
-      return () => {
-        clearTimeout(timer);
-      };
-    }
-  };
-
-  const lastThrow = () => {
-    if (playerScore < score) {
-      updatePoints(0);
-    } else {
-      updatePoints(score);
-    }
+      } else {
+        setScorePoints([...scorePoints, 0]);
+      }
+    }, 2500);
+    return () => {
+      clearTimeout(timer);
+    };
   };
 
   const checkScore = (score) => {
@@ -157,7 +155,10 @@ export default function Dart({ player, updatePoints, playerScore }) {
   }, [movingDart]);
 
   useEffect(() => {
-    refreshStates();
+    const timer = setTimeout(() => {
+      refreshStates();
+    }, 750);
+    return () => clearTimeout(timer);
   }, [player]);
 
   return (
@@ -332,7 +333,9 @@ export default function Dart({ player, updatePoints, playerScore }) {
           />
         </div>
       ))}
-      <p className="absolute z-0 top-12 text-2xl">Score: {score}</p>
+      <p className="absolute z-0 top-12 text-2xl">
+        Score: {score} {scorePoints.length > 0 && `(${scorePoints.join(", ")})`}
+      </p>
     </div>
   );
 }
