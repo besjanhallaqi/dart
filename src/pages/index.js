@@ -14,6 +14,9 @@ export default function Home() {
       <Link href={"/301"} className="hover:underline">
         Play 301
       </Link>
+      <p className="absolute bottom-4 text-xl">
+        NOTE: This game prefer to be played only on large screens
+      </p>
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-export default function Dart({ player, updatePoints, playerScore }) {
+export default function Dart({ updatePoints, playerScore, height, width }) {
   const numbers = [
     { value: 20, rotate: 261 },
     { value: 1, rotate: 279 },
@@ -49,15 +49,6 @@ export default function Dart({ player, updatePoints, playerScore }) {
   const [scorePoints, setScorePoints] = useState([]);
   const [darts, setDarts] = useState(dartsDefaultPosition);
 
-  let content, height, width;
-  if (typeof document !== "undefined") {
-    content = document.getElementById("dart-content");
-    if (content) {
-      height = content.offsetHeight;
-      width = content.offsetWidth;
-    }
-  }
-
   const refreshStates = () => {
     setScore(0);
     setScorePoints([]);
@@ -70,7 +61,7 @@ export default function Dart({ player, updatePoints, playerScore }) {
   };
 
   const writeFirstPoint = (e) => {
-    if (!movingDart) {
+    if (!movingDart && dartThrowIndex < 3) {
       const positionX = parseFloat(((e.clientX * 100) / width).toFixed(0));
       const positionY = parseFloat(((e.clientY * 100) / height).toFixed(0));
       setFirstPoint((prev) => (prev = { x: positionX, y: positionY }));
@@ -78,36 +69,39 @@ export default function Dart({ player, updatePoints, playerScore }) {
   };
 
   const writeSecondPoint = (e) => {
-    if (!movingDart && firstPoint) {
+    if (!movingDart && firstPoint && dartThrowIndex < 3) {
       const positionX = parseFloat(((e.clientX * 100) / width).toFixed(0));
       const positionY = parseFloat(((e.clientY * 100) / height).toFixed(0));
+      setMovingDart((prev) => (prev = true));
       setSecondPoint((prev) => (prev = { x: positionX, y: positionY }));
-      setMovingDart(true);
     }
   };
 
-  const throwDart = () => {
-    const xPercentage = secondPoint.x - firstPoint.x;
-    const yPercentage = (secondPoint.y - firstPoint.y) * -1;
-    const x = (width * (xPercentage / 100)).toFixed(0);
-    const y = (height * ((100 - yPercentage) / 100)).toFixed(0);
-    if (y < height) {
-      setMoveDone(true);
-      setDarts((prev) => {
-        prev[dartThrowIndex].position = {
-          bottom: height - y - 10 + "px",
-          left: "calc(50% + " + x + "px - 10px)",
-        };
-        return prev;
-      });
-      setDartThrowIndex(dartThrowIndex + 1);
-      returnValue((width / 2 + parseInt(x)).toFixed(0), y);
-    } else {
-      console.log("Try again...");
-    }
-    setFirstPoint();
-    setSecondPoint();
-  };
+  const throwDart = useMemo(
+    () => () => {
+      const xPercentage = secondPoint.x - firstPoint.x;
+      const yPercentage = (secondPoint.y - firstPoint.y) * -1;
+      const x = (width * (xPercentage / 100)).toFixed(0);
+      const y = (height * ((100 - yPercentage) / 100)).toFixed(0);
+      if (y < height && dartThrowIndex < 3) {
+        setMoveDone(true);
+        setDarts((prev) => {
+          prev[dartThrowIndex].position = {
+            bottom: height - y - 10 + "px",
+            left: "calc(50% + " + x + "px - 10px)",
+          };
+          return prev;
+        });
+        setDartThrowIndex(dartThrowIndex + 1);
+        returnValue((width / 2 + parseInt(x)).toFixed(0), y);
+      } else {
+        console.log("Try again...");
+      }
+      setFirstPoint();
+      setSecondPoint();
+    },
+    [firstPoint, secondPoint, dartThrowIndex, width, height]
+  );
 
   const returnValue = (x, y) => {
     const element = document.elementFromPoint(x, y);
@@ -120,6 +114,7 @@ export default function Dart({ player, updatePoints, playerScore }) {
         checkScore(totalScore);
       } else {
         setScorePoints([...scorePoints, 0]);
+        checkScore(score);
       }
     }, 2500);
     return () => {
@@ -128,38 +123,40 @@ export default function Dart({ player, updatePoints, playerScore }) {
   };
 
   const checkScore = (score) => {
-    if (dartThrowIndex === 2) {
+    if (playerScore < score) {
+      updatePoints(-1);
+      const timer = setTimeout(() => {
+        refreshStates();
+      }, 500);
+      return () => clearTimeout(timer);
+    } else if (playerScore === score) {
       updatePoints(score);
-    } else {
-      if (playerScore < score) {
-        updatePoints(0);
-      } else if (playerScore === score) {
-        updatePoints(score);
-      }
+      refreshStates();
+    } else if (dartThrowIndex === 2) {
+      updatePoints(score);
     }
+    setMovingDart((prev) => (prev = false));
   };
 
   useEffect(() => {
-    if (secondPoint) {
-      if (JSON.stringify(firstPoint) !== JSON.stringify(secondPoint)) {
+    if (secondPoint && movingDart) {
+      if (
+        JSON.stringify(firstPoint) !== JSON.stringify(secondPoint) &&
+        dartThrowIndex < 3
+      ) {
         throwDart();
       }
     }
   }, [secondPoint]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMovingDart(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [movingDart]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      refreshStates();
-    }, 750);
-    return () => clearTimeout(timer);
-  }, [player]);
+    if (dartThrowIndex > 2) {
+      const timer = setTimeout(() => {
+        refreshStates();
+      }, 3300);
+      return () => clearTimeout(timer);
+    }
+  }, [dartThrowIndex]);
 
   return (
     <div

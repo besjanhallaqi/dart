@@ -2,14 +2,28 @@ import Dart from "@/components/Dart";
 import { useEffect, useState } from "react";
 
 export default function Game301() {
+  const [height, setHeight] = useState();
+  const [width, setWidth] = useState();
   const [player1Points, setPlayer1Points] = useState(301);
   const [player2Points, setPlayer2Points] = useState(301);
   const [activePlayer, setActivePlayer] = useState(false);
   const [limitOversize, setLimitOversize] = useState(false);
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const content = document.getElementById("content");
+      if (content) {
+        setHeight(content.offsetHeight);
+        setWidth(content.offsetWidth);
+      }
+    }
+  }, []);
+
   const updatePoints = (points) => {
-    if (points === 0) {
+    if (points === -1) {
       setLimitOversize(true);
+      setActivePlayer(!activePlayer);
+      return;
     }
     if (activePlayer) {
       setPlayer2Points(player2Points - points);
@@ -22,7 +36,6 @@ export default function Game301() {
   const resetGame = () => {
     setPlayer1Points(301);
     setPlayer2Points(301);
-    setActivePlayer(!activePlayer);
   };
 
   useEffect(() => {
@@ -46,7 +59,7 @@ export default function Game301() {
   }, [player1Points, player2Points]);
 
   return (
-    <div id="content" className="relative w-full h-full">
+    <div id="content" className="relative w-full h-screen">
       <p className="absolute pointer-events-none z-20 text-4xl top-12 left-12">
         Turn: Player {activePlayer ? "two" : "one"}
         <br />
@@ -58,11 +71,14 @@ export default function Game301() {
         <br />
         Player two points: {player2Points}
       </p>
-      <Dart
-        player={activePlayer}
-        updatePoints={updatePoints}
-        playerScore={activePlayer ? player2Points : player1Points}
-      />
+      {height && width && (
+        <Dart
+          updatePoints={updatePoints}
+          playerScore={activePlayer ? player2Points : player1Points}
+          height={height}
+          width={width}
+        />
+      )}
     </div>
   );
 }
