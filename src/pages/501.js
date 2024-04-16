@@ -59,26 +59,31 @@ export default function Game501() {
   }, [player1Points, player2Points]);
 
   return (
-    <div id="content" className="relative w-full h-screen">
-      <p className="absolute pointer-events-none z-20 text-4xl top-12 left-12">
-        Turn: Player {activePlayer ? "two" : "one"}
-        <br />
-        <br />
-        {limitOversize ? "Limit exceeded " : ""}
-      </p>
-      <p className="absolute pointer-events-none z-20 text-4xl top-12 right-12">
-        Player one points: {player1Points}
-        <br />
-        Player two points: {player2Points}
-      </p>
-      {height && width && (
-        <Dart
-          updatePoints={updatePoints}
-          playerScore={activePlayer ? player2Points : player1Points}
-          height={height}
-          width={width}
-        />
-      )}
-    </div>
+    <>
+      <div className="xl:hidden w-full h-screen flex items-center justify-center">
+        <p>This game is not available for this screen.</p>
+      </div>
+      <div id="content" className="hidden xl:block relative w-full h-screen">
+        <p className="absolute pointer-events-none z-20 text-4xl top-12 left-12">
+          Turn: Player {activePlayer ? "two" : "one"}
+          <br />
+          <br />
+          {limitOversize ? "Limit exceeded " : ""}
+        </p>
+        <p className="absolute pointer-events-none z-20 text-4xl top-12 right-12">
+          Player one points: {player1Points}
+          <br />
+          Player two points: {player2Points}
+        </p>
+        {height && width && (
+          <Dart
+            updatePoints={updatePoints}
+            playerScore={activePlayer ? player2Points : player1Points}
+            height={height}
+            width={width}
+          />
+        )}
+      </div>
+    </>
   );
 }

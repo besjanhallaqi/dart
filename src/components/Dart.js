@@ -96,6 +96,7 @@ export default function Dart({ updatePoints, playerScore, height, width }) {
         returnValue((width / 2 + parseInt(x)).toFixed(0), y);
       } else {
         console.log("Try again...");
+        setMovingDart(false);
       }
       setFirstPoint();
       setSecondPoint();
@@ -145,6 +146,8 @@ export default function Dart({ updatePoints, playerScore, height, width }) {
         dartThrowIndex < 3
       ) {
         throwDart();
+      } else {
+        setMovingDart(false);
       }
     }
   }, [secondPoint]);
@@ -163,7 +166,7 @@ export default function Dart({ updatePoints, playerScore, height, width }) {
       id="dart-content"
       onMouseDown={writeFirstPoint}
       onMouseUp={writeSecondPoint}
-      className="relative w-full flex justify-center items-center pb-[10%] select-none h-screen bg-white"
+      className="relative w-full flex justify-center items-center pb-[10%] select-none h-screen overflow-hidden"
     >
       <div className="relative h-[60%] aspect-square">
         {numbers.map((item) => (
